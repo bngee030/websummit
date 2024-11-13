@@ -34,7 +34,7 @@ st.markdown(
 )
 
 
-csv_url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTmf4TjSXyG3y_GqrAuRTNjg58cT-D2mhOLPoGJSZQj4HL3SmtDgsTDOfU702lcGY79lcZ-dYIPtrwb/pub?gid=0&single=true&output=csv"
+csv_url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRZQuJUXz3YsejJJWpuX1JnDd5Em3mHhrClM7R--wcu4JBVNL4DvEEvWsduYVZED6zxi4yxCWIua3nJ/pub?output=csv"
 
 
 def load_data():
@@ -52,7 +52,7 @@ else:
     df = st.session_state.df
 
 # Button to refresh data
-if st.button("Refresh Data"):
+if st.button("Refresh"):
     # Reload the data and set session state to force a rerun
     df = load_data()
     st.session_state.df = df
@@ -60,60 +60,33 @@ if st.button("Refresh Data"):
 
 
 # Check if 'Name' and 'Age' columns exist, and then create a bar chart
-if "Company" in df.columns and "Ubiscore" in df.columns:
-    chart = (
-        alt.Chart(df)
-        .mark_text(
-            align="left",
-            dx=5,  # Adjust text position to the right of the bar
-            fontSize=14,
-            color="#fff",
-        )
-        .mark_bar(color="#1e88e5")
-        .configure_axis(
-            labelColor="#07e5a6",  # Color for axis labels
-            titleColor="#07e5a6",  # Color for axis titles
-        )
-        .encode(x="Ubiscore", y=alt.Y("Company", sort="-x"), text=alt.Text("value:Q"))
-        .properties(height=300)
+if 'Company' in df.columns and 'Ubiscore' in df.columns:
+    # Ensure 'Ubiscore' is numeric
+    df['Ubiscore'] = pd.to_numeric(df['Ubiscore'], errors='coerce')
+
+    df = df.nlargest(10, 'Ubiscore')
+
+    # Create the base chart
+    bars = alt.Chart(df).mark_bar(color="#1e88e5").encode(
+        y=alt.Y('Company', sort='-x'),  # Company names on the y-axis
+        x=alt.X('Ubiscore:Q'),  # Ubiscore values on the x-axis (the length of the bars)
+        tooltip=['Company', 'Ubiscore']  # Tooltip displaying Company and Ubiscore
     )
+
+    # Add text on top of the bars
+    texts = bars.mark_bar(color="#07e5a6").mark_text(
+        align='left',
+        baseline='middle',
+        dx=3,
+        dy=-5  # Nudges text to right so it doesn't appear on top of the bar
+    ).encode(
+        text='Company:N'  # Display the Ubiscore value
+    )
+
+    # Combine bars and text labels
+    chart = alt.layer(bars, texts).properties(width=500, height=300)
 
     # Display the chart in Streamlit, using full container width
     st.altair_chart(chart, use_container_width=True)
-
-    # df['Ubiscore'] = pd.to_numeric(df['Ubiscore'], errors='coerce')
-
-    # # Create the base chart
-    # base = alt.Chart(df).transform_fold(
-    #     ['Ubiscore'],
-    #     as_=['column', 'value']
-    # )
-    
-    # # Create the bars
-    # bars = base.mark_bar(color="#1e88e5").encode(
-    #     y=alt.Y('Company', sort='-x'),  # Company names on the y-axis
-    #     x=alt.X('value:Q'),  # Ubiscore values on the x-axis (the length of the bars)
-    #     color=alt.Color('column:N', scale=alt.Scale(range=["#1e88e5"])),  # Color for bars
-    #     tooltip=['Company', 'value']
-    # )
-    
-    # # Add text on top of the bars
-    # text = base.mark_text(
-    #     align='center',
-    #     baseline='middle',
-    #     color='#07e5a6',
-    #     dx=0, dy=-8  # Position text above the bars
-    # ).encode(
-    #     y=alt.Y('Company', sort='-x'),
-    #     x=alt.X('value:Q'),
-    #     text=alt.Text('value:Q', format='.0f')  # Display the Ubiscore value
-    # )
-    
-    # # Combine bars and text
-    # final_chart = (bars + text).properties(width=500, height=300)
-
-    # # Display the chart in Streamlit, using full container width
-    # st.altair_chart(final_chart, use_container_width=True)
-
 else:
-    st.error("The CSV file does not contain 'Company' and 'Ubiscore' columns.")
+    st.error("The CSV file does not have 'Company' and 'Ubiscore' columns.")
