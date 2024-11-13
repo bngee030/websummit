@@ -34,7 +34,7 @@ st.markdown(
 )
 
 
-csv_url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRZQuJUXz3YsejJJWpuX1JnDd5Em3mHhrClM7R--wcu4JBVNL4DvEEvWsduYVZED6zxi4yxCWIua3nJ/pub?output=csv"
+csv_url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRZQuJUXz3YsejJJWpuX1JnDd5Em3mHhrClM7R--wcu4JBVNL4DvEEvWsduYVZED6zxi4yxCWIua3nJ/pub?gid=0&single=true&output=csv"
 
 
 def load_data():
